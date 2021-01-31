@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using QuestTracker.Web.Data;
 using System;
 using System.Collections.Generic;
 using static QuestTracker.Model;
@@ -9,74 +10,46 @@ namespace QuestTracker.Web.Controllers
     [ApiController]
     public class PartyController : ControllerBase
     {
+        private IPartyRepo _repository;
+
+        public PartyController(IPartyRepo repository)
+        {
+            _repository = repository;
+        }
+
         // GET: api/<PartyController>
         [HttpGet]
         public IEnumerable<string> GetPartyNames()
         {
-            return parties.Keys;
+            return _repository.GetPartyNames();
         }
 
         // GET api/<PartyController>/ABC
         [HttpGet("{partyName}")]
         public Party GetParty(string partyName)
         {
-            return parties[partyName];
+            return _repository.GetParty(partyName);
         }
 
         // POST api/<PartyController>/ABC/new
         [HttpPost("{partyName}/new")]
         public void FormNewParty(string partyName)
         {
-            parties.Add(partyName, formParty());
+            _repository.FormNewParty(partyName);
         }
 
         // POST api/<PartyController>/ABC/addAdventurer
         [HttpPost("{partyName}/addAdventurer")]
         public void AddAdventurer(string partyName, [FromBody] Adventurer adventurer)
         {
-            var party = parties[partyName];
-            var updatedParty = addAdventurer(party, adventurer);
-            parties[partyName] = updatedParty;
+            _repository.AddAdventurer(partyName, adventurer);
         }
 
         // DELETE api/<PartyController>/5
         [HttpDelete("{partyName}")]
         public void DeleteParty(string partyName)
         {
-            parties.Remove(partyName);
+            _repository.DeleteParty(partyName);
         }
-
-
-        private Dictionary<string, Party> parties = new Dictionary<string, Party>
-        {
-            ["Colonize Mars"] = new Party(PartyState.Forming,
-                new List<Adventurer>
-                {
-                    new Adventurer("Elon Musk", new List<string> { "Visionary" })
-                }, new List<Encounter>()),
-            ["Fellowship of the Ring"] = new Party(PartyState.Active,
-                new List<Adventurer>
-                {
-                    new Adventurer("Frodo Baggins", new List<string> { "Walking", "Carrying Rings" }),
-                    new Adventurer("Samwise Gamgee", new List<string> { "Cooking", "Bravery" })
-                },
-                new List<Encounter>()),
-            ["Oregon Trail"] = new Party(PartyState.Complete,
-                new List<Adventurer>
-                {
-                    new Adventurer("John Cooper", new List<string> { "Hunting", "Building Rafts", "Setting Rations" }),
-                    new Adventurer("Sandy Cooper", new List<string> { "Cooking", "Dying of Dysentery" }),
-                    new Adventurer("Sally Cooper", new List<string> { "Eating", "Dying of Typhoid" })
-                },
-                new List<Encounter>
-                {
-                    new Encounter(new DateTime(1841, 3, 5), "You have set out from Independence"),
-                    new Encounter(new DateTime(1841, 3, 15), "Sally Cooper has typhoid"),
-                    new Encounter(new DateTime(1841, 4, 1), "Sally Cooper died of typhoid"),
-                    new Encounter(new DateTime(1841, 4, 3), "Sandy Cooper has dysentery"),
-                    new Encounter(new DateTime(1841, 4, 5), "Sandy Cooper died of dysentery"),
-                    new Encounter(new DateTime(1841, 4, 15), "John Cooper drowned while trying to raft across the South Platte River"),
-                })
-        };
     }
 }
